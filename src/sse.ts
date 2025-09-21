@@ -39,6 +39,17 @@ export async function runSSEServer(server: Server) {
 		});
 	});
 
+	// Handle POST requests to root (MCP protocol)
+	app.post("/", (req, res) => {
+		res.status(200).json({
+			message: "MCP server is running. Use /sse for SSE transport or /messages for direct API calls.",
+			endpoints: {
+				sse: "/sse",
+				messages: "/messages"
+			}
+		});
+	});
+
 	// Health check endpoint
 	app.get("/health", (req, res) => {
 		res.json({
