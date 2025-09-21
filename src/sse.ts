@@ -63,9 +63,10 @@ export async function runSSEServer(server: Server) {
 		});
 	});
 
-	app.listen(3020, () => {
+	const port = process.env.PORT || 3020;
+	app.listen(port, () => {
 		console.error(
-			"stability-ai MCP Server running on SSE at http://localhost:3020"
+			`stability-ai MCP Server running on SSE at http://localhost:${port}`
 		);
 	});
 }
