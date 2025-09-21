@@ -25,6 +25,29 @@ export async function runSSEServer(server: Server) {
 	// Used to allow parsing of the body of the request
 	app.use("/*", bodyParser.json());
 
+	// Root route for better UX
+	app.get("/", (req, res) => {
+		res.json({
+			status: "MCP Stability AI Server is running 🚀",
+			endpoints: {
+				sse: "/sse",
+				messages: "/messages",
+				health: "/health"
+			},
+			description: "This server provides Stability AI image processing tools via MCP protocol",
+			timestamp: new Date().toISOString()
+		});
+	});
+
+	// Health check endpoint
+	app.get("/health", (req, res) => {
+		res.json({
+			status: "healthy",
+			service: "stability-ai-mcp-server",
+			timestamp: new Date().toISOString()
+		});
+	});
+
 	app.get("/sse", async (req, res) => {
 		sseTransport = new SSEServerTransport("/messages", res);
 		await server.connect(sseTransport);
