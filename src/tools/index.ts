@@ -1,3 +1,6 @@
+// Export from generateImage.js
+export { generateImage, GenerateImageArgs, generateImageToolDefinition } from "./generateImage.js";
+
 // Export from generateImageCore.js 
 export { generateImageCore, generateImageCoreArgs, GenerateImageCoreArgs, generateImageCoreToolDefinition } from "./generateImageCore.js";
 
