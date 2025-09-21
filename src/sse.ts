@@ -2,6 +2,9 @@ import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import express, { Request } from "express";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import bodyParser from "body-parser";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 
 function getClientIp(req: Request): string {
 	return (
@@ -21,6 +24,25 @@ function getClientIp(req: Request): string {
 export async function runSSEServer(server: Server) {
 	let sseTransport: SSEServerTransport | null = null;
 	const app = express();
+
+	// Create uploads directory if it doesn't exist
+	const uploadsDir = process.env.IMAGE_STORAGE_DIRECTORY || "/tmp/uploads";
+	if (!fs.existsSync(uploadsDir)) {
+		fs.mkdirSync(uploadsDir, { recursive: true });
+	}
+
+	// Configure multer for file uploads
+	const storage = multer.diskStorage({
+		destination: (req, file, cb) => {
+			cb(null, uploadsDir);
+		},
+		filename: (req, file, cb) => {
+			const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+			cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+		}
+	});
+
+	const upload = multer({ storage: storage });
 
 	// Used to allow parsing of the body of the request
 	app.use("/*", bodyParser.json());
@@ -56,6 +78,24 @@ export async function runSSEServer(server: Server) {
 			status: "healthy",
 			service: "stability-ai-mcp-server",
 			timestamp: new Date().toISOString()
+		});
+	});
+
+	// Image upload endpoint
+	app.post("/upload", upload.single('image'), (req, res) => {
+		if (!req.file) {
+			res.status(400).json({ error: "No image file provided" });
+			return;
+		}
+
+		const fileUri = `file://${req.file.path}`;
+		
+		res.json({
+			success: true,
+			fileUri: fileUri,
+			filename: req.file.filename,
+			originalName: req.file.originalname,
+			size: req.file.size
 		});
 	});
 
